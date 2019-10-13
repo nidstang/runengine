@@ -4,7 +4,7 @@
   "description": "",
   "main": "jest.config.js",
   "scripts": {
-    "build": "webpakc --config ./buildTools/webpack.prod.js",
+    "build": "webpack --config ./buildTools/webpack.prod.js",
     "dev": "webpack-dev-server --config ./buildTools/webpack.dev.js",
     "lint-fix": "eslint --fix .",
     "test": "jest"
