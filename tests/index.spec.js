@@ -13,7 +13,7 @@ import {
     createVec3,
     createRect,
     withTransform,
-} from '../src';
+} from '@source';
 
 const contextMock = {
     save: jest.fn(),

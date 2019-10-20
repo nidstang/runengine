@@ -1,3 +1,4 @@
+const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const merge = require('webpack-merge');
 const { resolveApp } = require('./paths');
@@ -23,4 +24,10 @@ module.exports = merge(base, {
             template: 'index.template.html',
         }),
     ],
+
+    resolve: {
+        alias: {
+            '@source$': path.resolve(__dirname, 'src', 'index.js'),
+        }
+    },
 });
