@@ -6,7 +6,7 @@ jobs:
   include:
     - stage: tests
       name: "Unit tests"
-      script: ./runtests.sh
+      script: ./runtests
     - stage: build
       name: "Webpack builds umd library"
       script: npm run build
