@@ -1,4 +1,4 @@
-export const Vec3 = (x, y, z) => ({
+export const createVec3 = (x, y, z) => ({
     coords: { x, y, z },
     multiply(scalar) {
         this.coords.x = this.coords.x * scalar;
@@ -26,8 +26,8 @@ export const Vec3 = (x, y, z) => ({
 });
 
 const TransformProto = {
-    position: Vec3(0, 0, 0),
-    size: Vec3(0, 0),
+    position: createVec3(0, 0, 0),
+    size: createVec3(0, 0),
 };
 
 export const withTransform = () => ({
@@ -39,8 +39,8 @@ export const withTransform = () => ({
     },
 
     setTransform({ x = 0, y = 0, z = 0, w = 0, h = 0 }) {
-        this.transform.position = Vec3(x, y, z);
-        this.transform.size = Vec3(w, h);
+        this.transform.position = createVec3(x, y, z);
+        this.transform.size = createVec3(w, h);
         return this;
     },
 
@@ -99,13 +99,13 @@ const SpriteProto = {
     },
 };
 
-export const Sprite = options => (
+export const createSprite = options => (
     Object.assign(Object.create(SpriteProto), withTransform(), options)
 );
 
-export const Rect = options => Object.assign(withTransform(), options);
+export const createRect = options => Object.assign(withTransform(), options);
 
-export const Viewport = options => Object.assign(withTransform(), options);
+export const createViewport = options => Object.assign(withTransform(), options);
 
 const GraphicsProto = {
     ctx: null,
@@ -134,14 +134,14 @@ const GraphicsProto = {
     },
 
     getSprite(textureId) {
-        return Sprite({ image: ResourceLoader.getInstance().get(textureId) });
+        return createSprite({ image: ResourceLoader.getInstance().get(textureId) });
     },
 };
 
 export const Graphics = CreateFactory(GraphicsProto);
 
 const CameraProto = {
-    viewport: Viewport(),
+    viewport: createViewport(),
     setViewport(viewport) {
         this.viewport = viewport;
         return this;
@@ -182,18 +182,18 @@ const EntityProto = {
     },
 };
 
-export const Entity = options => (
+export const createEntity = options => (
     Object.assign(Object.create(EntityProto), withTransform(), options)
 );
 
 const ComponentProto = {
-    entity: Entity(),
+    entity: createEntity(),
     graphics: Graphics.getInstance(),
 
     update: () => true,
 };
 
-export const Component = options => Object.assign(Object.create(ComponentProto), options);
+export const createComponent = options => Object.assign(Object.create(ComponentProto), options);
 
 const SceneProto = {
     entities: [],
@@ -207,7 +207,7 @@ const SceneProto = {
     },
 };
 
-export const Scene = options => Object.assign(Object.create(SceneProto), options);
+export const createScene = options => Object.assign(Object.create(SceneProto), options);
 
 // / End of engine
 

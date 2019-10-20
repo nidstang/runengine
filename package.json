@@ -4,10 +4,11 @@
   "description": "",
   "main": "jest.config.js",
   "scripts": {
-    "build": "webpakc --config ./buildTools/webpack.prod.js",
+    "build": "webpack --config ./buildTools/webpack.prod.js",
     "dev": "webpack-dev-server --config ./buildTools/webpack.dev.js",
     "lint-fix": "eslint --fix .",
-    "test": "jest"
+    "test-prod": "NODE_ENV=prod jest --config jest.config.js",
+    "test": "jest --config jest.config.js"
   },
   "jest": {
     "transform": {

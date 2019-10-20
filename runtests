@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [[ $TRAVIS_BRANCH == 'master' ]]
+then
+    npm run test-prod
+else
+    npm test
+fi

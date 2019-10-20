@@ -1,8 +1,20 @@
 language: node_js
 node_js:
 - "10"
-script:
-- npm test
+
+jobs:
+  include:
+    - stage: tests
+      name: "Unit tests"
+      script: ./runtests
+    - stage: build
+      name: "Webpack builds umd library"
+      script: npm run build
+
+stages:
+  - name: build
+    if: branch = master
+  - tests
 
 notifications:
   email:

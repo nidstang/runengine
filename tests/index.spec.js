@@ -2,18 +2,18 @@
 import "@babel/polyfill";
 
 import {
-    Entity,
-    Component,
-    Sprite,
-    Scene,
+    createEntity,
+    createComponent,
+    createSprite,
+    createScene,
     Graphics,
     Camera,
-    Viewport,
+    createViewport,
     ResourceLoader,
-    Vec3,
-    Rect,
+    createVec3,
+    createRect,
     withTransform,
-} from '../src';
+} from '@source';
 
 const contextMock = {
     save: jest.fn(),
@@ -38,18 +38,18 @@ beforeEach(() => {
 describe('Tests for Api', () => {
     describe('Vec3 tests', () => {
         test('Vec3 must return an object with 3 coords, x, y and z', () => {
-            const vec3 = Vec3(2, 3, 3);
+            const vec3 = createVec3(2, 3, 3);
             expect(vec3.coords).toEqual({ x: 2, y: 3, z: 3 });
         });
 
         test('Vec3 must allow to multiply by scalar', () => {
-            const vec3 = Vec3(2, 2, 2).multiply(2);
+            const vec3 = createVec3(2, 2, 2).multiply(2);
 
             expect(vec3.coords).toEqual({ x: 4, y: 4, z: 4 });
         });
 
         test('Vec3 must allow to translate its coords to any destination', () => {
-            const vec3 = Vec3(1, 2, 3);
+            const vec3 = createVec3(1, 2, 3);
             vec3.translateX(4);
             vec3.translateY(4);
             vec3.translateZ(4);
@@ -81,33 +81,33 @@ describe('Tests for Api', () => {
 
     describe('Rect tests', () => {
         test('Rect factory must return a valid transform object', () => {
-            const rect = Rect();
+            const rect = createRect();
 
             expect(rect.getTransform()).toEqual({ x: 0, y: 0, z: 0, w: 0, h: 0 });
         });
 
         test('Rect.setPosition ought to update its transform', () => {
-            const rect = Rect().setTransform({ x: 1, y: 1, z: 1, w: 1, h: 1 });
+            const rect = createRect().setTransform({ x: 1, y: 1, z: 1, w: 1, h: 1 });
             expect(rect.getTransform()).toEqual({ x: 1, y: 1, z: 1, w: 1, h: 1 });
         });
     });
 
     describe('Sprite tests', () => {
         test('Sprite must get a transform', () => {
-            const sprite = Sprite();
+            const sprite = createSprite();
 
             expect(sprite.getTransform()).toEqual({ x: 0, y: 0, z: 0, w: 0, h: 0 });
         });
 
         test('Sprite must set the transform', () => {
-            const sprite = Sprite().setTransform({ x: 1, y: 2, z: 3, w: 10, h: 10 });
+            const sprite = createSprite().setTransform({ x: 1, y: 2, z: 3, w: 10, h: 10 });
 
             expect(sprite.getTransform()).toEqual({ x: 1, y: 2, z: 3, w: 10, h: 10 });
         });
 
         test('Sprite transform must be instance-safe', () => {
-            const s1 = Sprite();
-            const s2 = Sprite();
+            const s1 = createSprite();
+            const s2 = createSprite();
             s2.setTransform({ x: 1, y: 2, z: 3, w: 10, h: 10 });
 
             expect(s2.getTransform()).toEqual({ x: 1, y: 2, z: 3, w: 10, h: 10 });
@@ -129,7 +129,7 @@ describe('Tests for Api', () => {
         });
 
         test('Graphics.drawRect must call to the context api with coords and color', () => {
-            const rect = Rect().setTransform(2, 2, 0, 10, 10);
+            const rect = createRect().setTransform(2, 2, 0, 10, 10);
             Graphics.getInstance().drawRect(rect, '#fff');
             const { x, y, w, h } = rect.getTransform();
 
@@ -145,7 +145,7 @@ describe('Tests for Api', () => {
         });
 
         test('Graphics.drawSprite must call to the context api to draw a Sprite image in its poisiton', () => {
-            const sprite = Sprite({ image: new Image() }).setTransform({
+            const sprite = createSprite({ image: new Image() }).setTransform({
                 x: 2,
                 y: 3,
                 w: 10,
@@ -169,7 +169,7 @@ describe('Tests for Api', () => {
 
     describe('Component tests', () => {
         test('Component factory with no params must return a valid compoonent', () => {
-            const component = Component();
+            const component = createComponent();
 
             expect(component.entity.getTransform()).toEqual({
                 x: 0,
@@ -183,8 +183,8 @@ describe('Tests for Api', () => {
         });
 
         test('Component update must change its entity', () => {
-            const entity = Entity();
-            const comp = Component({
+            const entity = createEntity();
+            const comp = createComponent({
                 entity,
                 update() {
                     this.entity.setTransform({ x: 1, y: 1, z: 1 });
@@ -200,7 +200,7 @@ describe('Tests for Api', () => {
             const mockContext = { drawImage: () => null };
             Graphics.getInstance().setContext(mockContext);
 
-            const comp = Component();
+            const comp = createComponent();
 
             expect(comp.graphics.ctx).toEqual(mockContext);
         });
@@ -208,7 +208,7 @@ describe('Tests for Api', () => {
 
     describe('Entity tests', () => {
         test('Entity calls by no params must have default values', () => {
-            const e = Entity();
+            const e = createEntity();
             expect(e.getTransform()).toEqual({
                 x: 0,
                 y: 0,
@@ -219,7 +219,7 @@ describe('Tests for Api', () => {
         });
 
         test('Entity must be createdd correctly by its factory', () => {
-            const entity = Entity();
+            const entity = createEntity();
 
             expect(entity.update).not.toBeUndefined();
             expect(entity.getTransform()).toEqual({
@@ -232,15 +232,15 @@ describe('Tests for Api', () => {
         });
 
         test('Entity must be instance safe', () => {
-            const e1 = Entity().setTransform({ x: 1, y: 2, z: 3 });
-            const e2 = Entity().setTransform({ x: 3, y: 2, z: 1 });
+            const e1 = createEntity().setTransform({ x: 1, y: 2, z: 3 });
+            const e2 = createEntity().setTransform({ x: 3, y: 2, z: 1 });
 
             expect(e2.getTransform().x).toBe(3);
             expect(e1.getTransform().x).toBe(1);
         });
 
         test('Entity setPosition must return this context', () => {
-            const entity = Entity();
+            const entity = createEntity();
 
             const ctx = entity.setTransform(0, 0, 0);
 
@@ -248,29 +248,29 @@ describe('Tests for Api', () => {
         });
 
         test('Entity must have a component collection that will be empty by default', () => {
-            const entity = Entity();
+            const entity = createEntity();
             expect(entity.components).toEqual([]);
         });
 
         test('Entity addComponent must add a new component object to components collection', () => {
-            const entity = Entity();
-            const comp = Component();
+            const entity = createEntity();
+            const comp = createComponent();
             entity.addComponent(comp);
 
             expect(entity.components[0]).toEqual(comp);
         });
 
         test('Entity addComponent must pass entity context through the component', () => {
-            const entity = Entity({ position: Vec3(1, 2, 3) });
-            const comp = Component();
+            const entity = createEntity({ position: createVec3(1, 2, 3) });
+            const comp = createComponent();
             entity.addComponent(comp);
 
             expect(entity.components[0].entity.position).toEqual(entity.position);
         });
 
         test('Entity update must call to every component update', () => {
-            const entity = Entity();
-            const comp = Component({
+            const entity = createEntity();
+            const comp = createComponent({
                 update() {
                     this.entity.setTransform({ x: 1, y: 1, z: 1 });
                 },
@@ -291,15 +291,15 @@ describe('Tests for Api', () => {
 
     describe('Scene tests', () => {
         test('A scene basic must be created when we invoke Scene factory', () => {
-            const scene = Scene();
+            const scene = createScene();
 
             expect(scene.entities).toEqual([]);
         });
 
         test('The scene must allow to add entities to it', () => {
-            const scene = Scene();
-            const e1 = Entity();
-            const e2 = Entity();
+            const scene = createScene();
+            const e1 = createEntity();
+            const e2 = createEntity();
 
             scene.addEntity(e1);
             scene.addEntity(e2);
@@ -309,18 +309,18 @@ describe('Tests for Api', () => {
         });
 
         test('Entities must be able to update from a scene', () => {
-            const doublePositionComponent = Object.assign(Component(), {
+            const doublePositionComponent = Object.assign(createComponent(), {
                 update() {
                     this.entity.transform.position = this.entity.transform.position.multiply(
                         2,
                     );
                 },
             });
-            const scene = Scene();
-            const e1 = Entity().setTransform({ x: 1, y: 1, z: 1 });
+            const scene = createScene();
+            const e1 = createEntity().setTransform({ x: 1, y: 1, z: 1 });
 
             e1.addComponent(doublePositionComponent);
-            const e2 = Entity();
+            const e2 = createEntity();
 
             scene.addEntity(e1);
             scene.addEntity(e2);
@@ -335,13 +335,13 @@ describe('Tests for Api', () => {
 
     describe('Viewport tests', () => {
         test('Viewport without params must return a instance of viewport', () => {
-            const viewport = Viewport();
+            const viewport = createViewport();
 
             expect(viewport.getTransform()).toEqual({ x: 0, y: 0, z: 0, w: 0, h: 0 });
         });
 
         test('Viewport with params musth return a instance configured', () => {
-            const viewport = Viewport().setTransform({
+            const viewport = createViewport().setTransform({
                 x: 1,
                 y: 1,
                 z: 0,
@@ -373,7 +373,7 @@ describe('Tests for Api', () => {
         });
 
         test('Camera must allow to set a new viewport', () => {
-            const viewport = Viewport().setTransform({
+            const viewport = createViewport().setTransform({
                 x: 1,
                 y: 1,
                 z: 0,
@@ -393,14 +393,14 @@ describe('Tests for Api', () => {
         });
 
         test('Camera must be able to follow an entity centrally', () => {
-            const viewport = Viewport().setTransform({
+            const viewport = createViewport().setTransform({
                 x: 0,
                 y: 0,
                 w: 10,
                 h: 10,
             });
             const cam = Camera.getInstance().setViewport(viewport);
-            const entity = Entity().setTransform({ x: 5, y: 5, w: 5, h: 5 });
+            const entity = createEntity().setTransform({ x: 5, y: 5, w: 5, h: 5 });
 
             cam.followEntity(entity);
             const { x, y } = cam.viewport.getTransform();
@@ -410,7 +410,7 @@ describe('Tests for Api', () => {
         });
 
         test('Camera.getPositionInViewport must return a vec3 in camera coords', () => {
-            const viewport = Viewport().setTransform({
+            const viewport = createViewport().setTransform({
                 x: 5,
                 y: 5,
                 z: 0,
@@ -418,7 +418,7 @@ describe('Tests for Api', () => {
                 h: 10,
             });
             const cam = Camera.getInstance().setViewport(viewport);
-            const entity = Entity().setTransform({
+            const entity = createEntity().setTransform({
                 x: 2,
                 y: 2,
                 w: 10,
