@@ -9,12 +9,13 @@ jobs:
       script: ./runtests
     - stage: build
       name: "Webpack builds umd library"
-      script: npm run build
+      script: npm run build && ./runtests
 
 stages:
   - name: build
     if: branch = master
-  - tests
+  - name: tests
+    if: branch != master
 
 notifications:
   email:
