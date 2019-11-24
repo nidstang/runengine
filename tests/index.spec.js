@@ -26,6 +26,19 @@ const contextMock = {
         height: 100,
     },
 };
+const mockImage = () => {
+    let instances = [];
+    let oldImage = window.Image;
+    window.Image = function () {
+        instances.push(this);
+    };
+
+    return {
+        callOnLoadCallbacks: () => instances.map(i => i.onload()),
+        callOnErrorCallbacks: () => instances.map(i => i.onerror()),
+        restore: () => window.Image = oldImage,
+    };
+};
 
 Graphics.getInstance().setContext(contextMock);
 
@@ -138,7 +151,7 @@ describe('Tests for Api', () => {
             expect(contextMock.restore).toHaveBeenCalled();
             expect(contextMock.fillStyle).toBe('#fff');
         });
-
+        
         test('Graphics.clear must call to the context api to clear the canvas', () => {
             Graphics.getInstance().clear();
             expect(contextMock.clearRect).toHaveBeenCalledWith(0, 0, 100, 100);
@@ -444,12 +457,52 @@ describe('Tests for Api', () => {
             expect(loader.resources).toEqual({});
         });
 
-        /* test('Resource loader must load the list of tuples that is passed', async () => {
+        test('The resource loader get method must return undefined when the resource I am trying to get, does not exist', () => {
             const loader = ResourceLoader.getInstance();
 
-            await loader.load(['cat', 'some/path'], ['bear', 'some/path']);
+            expect(loader.get('test')).toBeUndefined();
+        });
 
-            expect(loader.get('cat')).not.toBeUndefined();
-        });*/
+        test('To call the load method without resources must resolves inmediately', done => {
+            const loader = ResourceLoader.getInstance();
+            loader.load().then(done);
+        });
+
+        test('The resource loader must load resources from a list of tuples that is passed when I call the load method', done => {
+            const imageMock = mockImage();
+
+            const loader = ResourceLoader.getInstance();
+
+            loader.load([['cat', 'some/path']])
+                .then(() => {
+                    expect(loader.get('cat')).not.toBeUndefined();
+                    done();
+            });
+
+            imageMock.callOnLoadCallbacks();
+            imageMock.restore();
+        });
+
+        test('To call to load method with several resources must resolves the promise when all resources have been loaded', done => {
+            const imageMock = mockImage();
+
+            const loader = ResourceLoader.getInstance();
+
+            loader.load([['cat', 'some/path'], ['bear', 'some/path']]).then(done);
+
+            imageMock.callOnLoadCallbacks();
+            imageMock.restore();
+        });
+
+        test('if load method goes wrong, it must return a rejected promise', done => {
+            const imageMock = mockImage();
+
+            const loader = ResourceLoader.getInstance();
+
+            loader.load([['cat', 'some/path'], ['bear', 'some/path']]).catch(done);
+
+            imageMock.callOnErrorCallbacks();
+            imageMock.restore();
+        });
     });
 });
