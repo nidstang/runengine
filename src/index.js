@@ -211,6 +211,29 @@ const SceneProto = {
 
 export const createScene = options => Object.assign(Object.create(SceneProto), options);
 
+export const createSceneReducer = (reducer, initialState = {}) => {
+    let actionStream = [];
+    const dispatch = action => {
+        actionStream.push(action);
+    };
+
+    const update = state => delta => {
+        const newState = actionStream.reduce(reducer(delta), state);
+        actionStream = [];
+
+        newState.entities.map(entity => entity.update());
+
+        return newState;
+    };
+
+    return {
+        state: { ...initialState, entities: [] },
+        dispatch,
+        update,
+        getActionStream: () => actionStream,
+    };
+};
+
 // / End of engine
 
 // / Example
@@ -305,9 +328,41 @@ export const createScene = options => Object.assign(Object.create(SceneProto), o
 // const canvas = document.getElementById('canvas');
 // const ctx = canvas.getContext('2d');
 
+// const moveEst = t => ({
+//     ...t,
+//     x: t.x + 10,
+// });
+
+// /* eslint-disable */
+// const reducer = delta => (state, action) => {
+//     switch (action) {
+//     case 'INIT':
+//         return { ...state, entities: [TreeEntity, PlayerEntity] };
+//     case 'PLAYER::MOVE_EST':
+//         PlayerEntity.moveEst();
+//         return state;
+//     case 'PLAYER::MOVE_NORTH':
+//         PlayerEntity.moveNorth();
+//         return state;
+//     case 'PLAYER::MOVE_WEST':
+//         PlayerEntity.moveWest();
+//         return state;
+//     case 'PLAYER::MOVE_SOUTH':
+//         PlayerEntity.moveSouth();
+//         return state;
+//     default:
+//         return state;
+//     }
+// };
+
+// const { state, dispatch, update } = createSceneReducer(reducer, {});
+// let nextState = state;
+// dispatch('INIT');
+
 // const animate = () => {
 //     Graphics.getInstance().clear();
-//     MainScene.update();
+//     // MainScene.update();
+//     nextState = update(nextState)(0);
 //     requestAnimationFrame(animate);
 // };
 
@@ -326,19 +381,23 @@ export const createScene = options => Object.assign(Object.create(SceneProto), o
 // loader.load([['tree', 'https://www.iucn.org/sites/dev/files/styles/media_thumbnail/public/content/images/2019/horse_chestnut_aesculus_hippocastanum_vulnerable_pixabay.jpg?itok=gdioJmlY']]).then(init);
 
 // document.getElementById('north').addEventListener('click', () => {
-//     PlayerEntity.moveNorth();
+//     dispatch('PLAYER::MOVE_NORTH');
+//     // PlayerEntity.moveNorth();
 // });
 
 // document.getElementById('south').addEventListener('click', () => {
-//     PlayerEntity.moveSouth();
+//     dispatch('PLAYER::MOVE_SOUTH');
+//     // PlayerEntity.moveSouth();
 // });
 
 // document.getElementById('west').addEventListener('click', () => {
-//     PlayerEntity.moveWest();
+//     dispatch('PLAYER::MOVE_WEST');
+//     // PlayerEntity.moveWest();
 // });
 
 // document.getElementById('est').addEventListener('click', () => {
-//     PlayerEntity.moveEst();
+//     dispatch('PLAYER::MOVE_EST');
+//     // PlayerEntity.moveEst();
 // });
 
 /* const Renderer = Component({
