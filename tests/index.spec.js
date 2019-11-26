@@ -6,6 +6,7 @@ import {
     createComponent,
     createSprite,
     createScene,
+    createSceneReducer,
     Graphics,
     Camera,
     createViewport,
@@ -447,6 +448,43 @@ describe('Tests for Api', () => {
                 w: 10,
                 h: 10,
             });
+        });
+    });
+
+    describe('Scene Reducer tests', () => {
+        test('createSceneReducer which recives a reducer and a initialState must return a dispatch function and a update function', () => {
+            const { dispatch, update } = createSceneReducer((state, action) => state, {});
+
+            expect(typeof dispatch).toBe('function');
+            expect(typeof update).toBe('function');
+        });
+
+        test('the state that is returned by createSceneReducer must be the initialState and an empty array of entities', () => {
+            const { state } = createSceneReducer((state, action) => state, { status: false });
+
+            expect(state).toEqual({ entities: [], status: false });
+        });
+
+        test('the dispatch function that is returned by createSceneReducer must add the action passed to the array of actions', () => {
+            const { dispatch, getActionStream } = createSceneReducer((state, action) => state, { status: false });
+            dispatch('MY_ACTION');
+            expect(getActionStream()).toEqual(['MY_ACTION']);
+        });
+
+        test('the update function that is returned by createSceneReducer must apply the reducer with a state over actionStream and return a new state', () => {
+            const reducer = delta => (state, action) => {
+                switch(action) {
+                    case 'TEST':
+                        return { ...state, status: true };
+                    default:
+                        return state;
+                }
+            };
+            const { dispatch, state, update } = createSceneReducer(reducer, { status: false });
+            dispatch('TEST');
+            const world = update(state)(0.1);
+
+            expect(world.status).toEqual(true);
         });
     });
 
