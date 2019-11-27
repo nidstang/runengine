@@ -66,9 +66,11 @@ const CreateFactory = proto => {
 const ResourcesLoaderProto = {
     resources: {},
 
-    load(pairs) {
+    load(pairs = []) {
         return new Promise((resolve, reject) => {
             let total = pairs.length;
+
+            if (!total) resolve();
 
             pairs.forEach(([id, url]) => {
                 const image = new Image();
@@ -209,97 +211,194 @@ const SceneProto = {
 
 export const createScene = options => Object.assign(Object.create(SceneProto), options);
 
+export const createSceneReducer = (reducer, initialState = {}) => {
+    let actionStream = [];
+    const dispatch = action => {
+        actionStream.push(action);
+    };
+
+    const update = state => delta => {
+        const newState = actionStream.reduce(reducer(delta), state);
+        actionStream = [];
+
+        newState.entities.map(entity => entity.update());
+
+        return newState;
+    };
+
+    return {
+        state: { ...initialState, entities: [] },
+        dispatch,
+        update,
+        getActionStream: () => actionStream,
+    };
+};
+
 // / End of engine
 
 // / Example
 
-/* const CameraLookat = Component({
-    update() {
-        Camera.getInstance().followEntity(this.entity);
-    },
-});
+// const CameraLookat = createComponent({
+//     update() {
+//         Camera.getInstance().followEntity(this.entity);
+//     },
+// });
 
-const RectRenderer = Component({
-    init() {
-        const { x, y } = this.entity.getTransform();
-        this.rect = Rect().setTransform({ x, y, w: 10, h: 10 });
-        Graphics.getInstance().drawRect(this.rect);
-        return this;
-    },
-    update() {
-        this.rect.setTransform(
-            Camera.getInstance().mapTransformInViewport(this.entity.getTransform()),
-        );
+// const RectRenderer = createComponent({
+//     init() {
+//         const { x, y } = this.entity.getTransform();
+//         this.rect = createRect().setTransform({ x, y, w: 10, h: 10 });
+//         Graphics.getInstance().drawRect(this.rect);
+//         return this;
+//     },
+//     update() {
+//         this.rect.setTransform(
+//             Camera.getInstance().mapTransformInViewport(this.entity.getTransform()),
+//         );
 
-        Graphics.getInstance().drawRect(this.rect, this.color);
-    },
-});
+//         Graphics.getInstance().drawRect(this.rect, this.color);
+//     },
+// });
 
-Camera.getInstance().setViewport(Viewport().setTransform({ w: 100, h: 100 }));
-const rectRenderer1 = Object.create(RectRenderer);
-const rectRenderer2 = Object.assign(Object.create(RectRenderer), {
-    color: '#539865',
-});
-const PlayerEntity = Entity({
-    moveEst() {
-        const { x, y, w, h } = this.getTransform();
-        this.setTransform({ x: x + 10, y, w, h });
-    },
+// const Renderer = createComponent({
+//     setSprite(sprite) {
+//         this.sprite = sprite;
+//         return this;
+//     },
 
-    moveWest() {
-        const { x, y, w, h } = this.getTransform();
-        this.setTransform({ x: x - 10, y, w, h });
-    },
+//     setTexture(textureId) {
+//         this.sprite = Graphics.getInstance().getSprite(textureId);
+//         this.sprite.setTransform(this.entity.getTransform());
+//         Graphics.getInstance().drawSprite(this.sprite);
+//         return this;
+//     },
 
-    moveNorth() {
-        const { x, y, w, h } = this.getTransform();
-        this.setTransform({ x, y: y - 10, w, h });
-    },
+//     update() {
+//         if (this.sprite) {
+//             this.sprite.setTransform(
+//                 Camera.getInstance().mapTransformInViewport(this.entity.getTransform()),
+//             );
 
-    moveSouth() {
-        const { x, y, w, h } = this.getTransform();
-        this.setTransform({ x, y: y + 10, w, h });
-    },
-}).setTransform({ x: 10, y: 10, w: 10, h: 10 });
+//             Graphics.getInstance().drawSprite(this.sprite);
+//         }
+//         return this;
+//     },
+// });
 
-PlayerEntity.addComponent(CameraLookat).addComponent(rectRenderer1);
-const TreeEntity = Entity()
-    .setTransform({ x: 20, y: 20, w: 10, h: 10 })
-    .addComponent(rectRenderer2);
+// Camera.getInstance().setViewport(createViewport().setTransform({ w: 100, h: 100 }));
+// const rectRenderer1 = Object.create(RectRenderer);
+// const rectRenderer2 = Object.assign(Object.create(RectRenderer), {
+//     color: '#539865',
+// });
+// const renderer = Object.create(Renderer);
+// const PlayerEntity = createEntity({
+//     moveEst() {
+//         const { x, y, w, h } = this.getTransform();
+//         this.setTransform({ x: x + 10, y, w, h });
+//     },
 
-const MainScene = Scene({
-    entities: [TreeEntity, PlayerEntity],
-});
+//     moveWest() {
+//         const { x, y, w, h } = this.getTransform();
+//         this.setTransform({ x: x - 10, y, w, h });
+//     },
 
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-Graphics.getInstance().setContext(ctx);
-rectRenderer1.init();
-rectRenderer2.init();
+//     moveNorth() {
+//         const { x, y, w, h } = this.getTransform();
+//         this.setTransform({ x, y: y - 10, w, h });
+//     },
 
-const animate = () => {
-    Graphics.getInstance().clear();
-    MainScene.update();
-    requestAnimationFrame(animate);
-};
+//     moveSouth() {
+//         const { x, y, w, h } = this.getTransform();
+//         this.setTransform({ x, y: y + 10, w, h });
+//     },
+// }).setTransform({ x: 10, y: 10, w: 100, h: 100 });
 
-animate();
+// PlayerEntity.addComponent(CameraLookat).addComponent(rectRenderer1);
+// const TreeEntity = createEntity({
+//     init() {
+//         renderer.setTexture('tree');
+//     },
 
-document.getElementById('north').addEventListener('click', () => {
-    PlayerEntity.moveNorth();
-});
+// }).setTransform({ x: 150, y: 20, w: 100, h: 100 }).addComponent(renderer);
 
-document.getElementById('south').addEventListener('click', () => {
-    PlayerEntity.moveSouth();
-});
+// const MainScene = createScene({
+//     entities: [TreeEntity, PlayerEntity],
+// });
 
-document.getElementById('west').addEventListener('click', () => {
-    PlayerEntity.moveWest();
-});
+// const canvas = document.getElementById('canvas');
+// const ctx = canvas.getContext('2d');
 
-document.getElementById('est').addEventListener('click', () => {
-    PlayerEntity.moveEst();
-});
+// const moveEst = t => ({
+//     ...t,
+//     x: t.x + 10,
+// });
+
+// /* eslint-disable */
+// const reducer = delta => (state, action) => {
+//     switch (action) {
+//     case 'INIT':
+//         return { ...state, entities: [TreeEntity, PlayerEntity] };
+//     case 'PLAYER::MOVE_EST':
+//         PlayerEntity.moveEst();
+//         return state;
+//     case 'PLAYER::MOVE_NORTH':
+//         PlayerEntity.moveNorth();
+//         return state;
+//     case 'PLAYER::MOVE_WEST':
+//         PlayerEntity.moveWest();
+//         return state;
+//     case 'PLAYER::MOVE_SOUTH':
+//         PlayerEntity.moveSouth();
+//         return state;
+//     default:
+//         return state;
+//     }
+// };
+
+// const { state, dispatch, update } = createSceneReducer(reducer, {});
+// let nextState = state;
+// dispatch('INIT');
+
+// const animate = () => {
+//     Graphics.getInstance().clear();
+//     // MainScene.update();
+//     nextState = update(nextState)(0);
+//     requestAnimationFrame(animate);
+// };
+
+// const init = () => {
+//     Graphics.getInstance().setContext(ctx);
+//     rectRenderer1.init();
+//     // rectRenderer2.init();
+//     TreeEntity.init();
+//     animate();
+// };
+
+// // animate();
+
+// const loader = ResourceLoader.getInstance();
+
+// loader.load([['tree', 'https://www.iucn.org/sites/dev/files/styles/media_thumbnail/public/content/images/2019/horse_chestnut_aesculus_hippocastanum_vulnerable_pixabay.jpg?itok=gdioJmlY']]).then(init);
+
+// document.getElementById('north').addEventListener('click', () => {
+//     dispatch('PLAYER::MOVE_NORTH');
+//     // PlayerEntity.moveNorth();
+// });
+
+// document.getElementById('south').addEventListener('click', () => {
+//     dispatch('PLAYER::MOVE_SOUTH');
+//     // PlayerEntity.moveSouth();
+// });
+
+// document.getElementById('west').addEventListener('click', () => {
+//     dispatch('PLAYER::MOVE_WEST');
+//     // PlayerEntity.moveWest();
+// });
+
+// document.getElementById('est').addEventListener('click', () => {
+//     dispatch('PLAYER::MOVE_EST');
+//     // PlayerEntity.moveEst();
+// });
 
 /* const Renderer = Component({
     setSprite: function(sprite) {

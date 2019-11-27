@@ -6,6 +6,7 @@ import {
     createComponent,
     createSprite,
     createScene,
+    createSceneReducer,
     Graphics,
     Camera,
     createViewport,
@@ -25,6 +26,19 @@ const contextMock = {
         width: 100,
         height: 100,
     },
+};
+const mockImage = () => {
+    let instances = [];
+    let oldImage = window.Image;
+    window.Image = function () {
+        instances.push(this);
+    };
+
+    return {
+        callOnLoadCallbacks: () => instances.map(i => i.onload()),
+        callOnErrorCallbacks: () => instances.map(i => i.onerror()),
+        restore: () => window.Image = oldImage,
+    };
 };
 
 Graphics.getInstance().setContext(contextMock);
@@ -138,7 +152,7 @@ describe('Tests for Api', () => {
             expect(contextMock.restore).toHaveBeenCalled();
             expect(contextMock.fillStyle).toBe('#fff');
         });
-
+        
         test('Graphics.clear must call to the context api to clear the canvas', () => {
             Graphics.getInstance().clear();
             expect(contextMock.clearRect).toHaveBeenCalledWith(0, 0, 100, 100);
@@ -437,6 +451,43 @@ describe('Tests for Api', () => {
         });
     });
 
+    describe('Scene Reducer tests', () => {
+        test('createSceneReducer which recives a reducer and a initialState must return a dispatch function and a update function', () => {
+            const { dispatch, update } = createSceneReducer((state, action) => state, {});
+
+            expect(typeof dispatch).toBe('function');
+            expect(typeof update).toBe('function');
+        });
+
+        test('the state that is returned by createSceneReducer must be the initialState and an empty array of entities', () => {
+            const { state } = createSceneReducer((state, action) => state, { status: false });
+
+            expect(state).toEqual({ entities: [], status: false });
+        });
+
+        test('the dispatch function that is returned by createSceneReducer must add the action passed to the array of actions', () => {
+            const { dispatch, getActionStream } = createSceneReducer((state, action) => state, { status: false });
+            dispatch('MY_ACTION');
+            expect(getActionStream()).toEqual(['MY_ACTION']);
+        });
+
+        test('the update function that is returned by createSceneReducer must apply the reducer with a state over actionStream and return a new state', () => {
+            const reducer = delta => (state, action) => {
+                switch(action) {
+                    case 'TEST':
+                        return { ...state, status: true };
+                    default:
+                        return state;
+                }
+            };
+            const { dispatch, state, update } = createSceneReducer(reducer, { status: false });
+            dispatch('TEST');
+            const world = update(state)(0.1);
+
+            expect(world.status).toEqual(true);
+        });
+    });
+
     describe('Resources loader tests', () => {
         test('Resource loader factory must return a instance of resource loader', () => {
             const loader = ResourceLoader.getInstance();
@@ -444,12 +495,52 @@ describe('Tests for Api', () => {
             expect(loader.resources).toEqual({});
         });
 
-        /* test('Resource loader must load the list of tuples that is passed', async () => {
+        test('The resource loader get method must return undefined when the resource I am trying to get, does not exist', () => {
             const loader = ResourceLoader.getInstance();
 
-            await loader.load(['cat', 'some/path'], ['bear', 'some/path']);
+            expect(loader.get('test')).toBeUndefined();
+        });
 
-            expect(loader.get('cat')).not.toBeUndefined();
-        });*/
+        test('To call the load method without resources must resolves inmediately', done => {
+            const loader = ResourceLoader.getInstance();
+            loader.load().then(done);
+        });
+
+        test('The resource loader must load resources from a list of tuples that is passed when I call the load method', done => {
+            const imageMock = mockImage();
+
+            const loader = ResourceLoader.getInstance();
+
+            loader.load([['cat', 'some/path']])
+                .then(() => {
+                    expect(loader.get('cat')).not.toBeUndefined();
+                    done();
+            });
+
+            imageMock.callOnLoadCallbacks();
+            imageMock.restore();
+        });
+
+        test('To call to load method with several resources must resolves the promise when all resources have been loaded', done => {
+            const imageMock = mockImage();
+
+            const loader = ResourceLoader.getInstance();
+
+            loader.load([['cat', 'some/path'], ['bear', 'some/path']]).then(done);
+
+            imageMock.callOnLoadCallbacks();
+            imageMock.restore();
+        });
+
+        test('if load method goes wrong, it must return a rejected promise', done => {
+            const imageMock = mockImage();
+
+            const loader = ResourceLoader.getInstance();
+
+            loader.load([['cat', 'some/path'], ['bear', 'some/path']]).catch(done);
+
+            imageMock.callOnErrorCallbacks();
+            imageMock.restore();
+        });
     });
 });
