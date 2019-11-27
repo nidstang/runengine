@@ -1,7 +1,8 @@
 {
-  "name": "rune-engine",
-  "version": "1.0.0",
+  "name": "@nidstang/runengine",
+  "version": "1.1.0",
   "description": "",
+  "repository": "https://github.com/nidstang/runengine.git",
   "main": "jest.config.js",
   "scripts": {
     "build": "webpack --config ./buildTools/webpack.prod.js",
@@ -42,5 +43,6 @@
     "webpack-merge": "^4.2.1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" }
 }
