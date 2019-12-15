@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "description": "",
   "repository": "https://github.com/nidstang/runengine.git",
-  "main": "jest.config.js",
+  "main": "dist/runengine.umd.js",
   "scripts": {
     "build": "webpack --config ./buildTools/webpack.prod.js",
     "dev": "webpack-dev-server --config ./buildTools/webpack.dev.js",
